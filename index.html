@@ -187,22 +187,43 @@
     .miniDate{ display:none; }
 
     .miniCountdown{
-      display:flex;
-      gap:4px;
-      flex-wrap:nowrap; /* ✅ siempre en una sola línea */
-      justify-content:flex-end;
-      align-items:center;
-    }
-    .pill{
-      background:#f9f9f9;
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:4px 6px;
-      min-width:44px;
-      box-sizing:border-box;
-    }
-    .pill .pnum{ font-weight:800; font-size:13px; line-height:1; }
-    .pill .plbl{ font-size:9px; color:#666; text-transform:uppercase; margin-top:3px; }
+	  display:flex;
+	  gap:2px;                 /* más juntos */
+	  flex-wrap:nowrap;
+	  justify-content:flex-end;
+	  align-items:center;
+	}
+
+	.pill{
+	  background:#f9f9f9;
+	  border:1px solid #eee;
+	  border-radius:12px;
+	  padding:6px 8px;         /* un poco más grande */
+	  min-width:52px;          /* más ancho */
+	  box-sizing:border-box;
+	}
+
+	.pill .pnum{
+	  font-weight:800;
+	  font-size:15px;          /* número más grande */
+	  line-height:1;
+	}
+
+	.pill .plbl{
+	  font-size:10px;          /* etiqueta un poco más grande */
+	  color:#666;
+	  text-transform:uppercase;
+	  margin-top:3px;
+	}
+
+	/* para que queden aún más compactos visualmente */
+	.miniCountdown .pill{
+	  margin-left:-1px;
+	}
+	.miniCountdown .pill:first-child{
+	  margin-left:0;
+	}
+
 
     /* --- Calendario (Chile) --- */
     .calHeader{
@@ -309,10 +330,31 @@
 
       .hgMini{ width:35px; height:56px; }
 
-      .miniCountdown{ gap:3px; }
-      .pill{ min-width:40px; padding:3px 5px; }
-      .pill .pnum{ font-size:11px; }
-      .pill .plbl{ font-size:7px; }
+      .miniCountdown{
+	    gap:2px;                 /* más juntos en móvil */
+	  }
+
+	  .pill{
+	    min-width:46px;          /* más grande pero sin romper layout */
+	    padding:4px 6px;
+	  }
+
+	  .pill .pnum{
+	    font-size:12px;          /* más grande en móvil */
+	  }
+
+	  .pill .plbl{
+	    font-size:8px;
+	  }
+
+	  /* compactación extra */
+	  .miniCountdown .pill{
+	    margin-left:-1px;
+	  }
+	  .miniCountdown .pill:first-child{
+	    margin-left:0;
+	  }
+
 
       .calDay{ min-height:44px; padding:6px 6px 8px; }
       .calDay .n{ font-size:12px; }
