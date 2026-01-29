@@ -78,7 +78,6 @@
       border-radius:14px;
       padding:14px 16px;
       min-width:95px;
-      box-sizing:border-box;
     }
 
     .num{ font-size:34px; font-weight:700; }
@@ -126,14 +125,13 @@
       color:#222;
       text-align:left;
     }
-
-    /* ✅ 2 por fila en PC, 1 por fila en celular */
     .miniGrid{
       display:grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap:12px;
     }
-    @media (max-width:520px){ .miniGrid{ grid-template-columns: 1fr; } }
+    @media (max-width:900px){ .miniGrid{ grid-template-columns: repeat(2, 1fr);} }
+    @media (max-width:520px){ .miniGrid{ grid-template-columns: 1fr;} }
 
     .miniCard{
       background:#ffffffee;
@@ -162,18 +160,14 @@
       color:#111;
       white-space:nowrap;
     }
-
-    /* ✅ Permite 2 líneas (fecha arriba / año abajo) */
     .miniDate{
       font-size:12px;
       color:#555;
       margin-top:2px;
-      white-space:normal;
-      overflow:visible;
-      text-overflow:clip;
-      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
-
     .miniCountdown{
       display:flex;
       gap:6px;
@@ -181,133 +175,26 @@
       justify-content:flex-end;
       align-items:center;
     }
-
-    /* ✅ Más compacto */
     .pill{
       background:#f9f9f9;
       border:1px solid #eee;
       border-radius:12px;
-      padding:5px 6px;
-      min-width:46px;
-      box-sizing:border-box;
+      padding:6px 8px;
+      min-width:52px;
     }
-    .pill .pnum{ font-weight:800; font-size:12px; line-height:1; }
-    .pill .plbl{ font-size:9px; color:#666; text-transform:uppercase; margin-top:3px; }
+    .pill .pnum{ font-weight:800; font-size:14px; line-height:1; }
+    .pill .plbl{ font-size:10px; color:#666; text-transform:uppercase; margin-top:3px; }
 
-    /* --- Calendario (Chile) --- */
-    .calHeader{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .calTitle{
-      font-weight:800;
-      font-size:16px;
-      text-align:left;
-    }
-    .calLegend{
-      font-size:12px;
-      color:#555;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .dot{
-      width:10px; height:10px; border-radius:50%;
-      display:inline-block; margin-right:6px;
-      border:1px solid rgba(0,0,0,.15);
-    }
-    .dot.past{ background: rgba(0,0,0,.18); }
-    .dot.today{ background: rgba(0,0,0,.65); }
-    .dot.future{ background: rgba(255,255,255,.6); }
-
-    .calGrid{
-      display:grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap:8px;
-    }
-    .calWday{
-      font-size:11px;
-      color:#666;
-      text-transform:uppercase;
-      letter-spacing:.4px;
-      padding:6px 0;
-    }
-    .calDay{
-      background:#ffffffcc;
-      border:1px solid #eee;
-      border-radius:12px;
-      min-height:52px;
-      padding:8px 8px 10px;
-      position:relative;
-      overflow:hidden;
-      display:flex;
-      align-items:flex-start;
-      justify-content:flex-start;
-      box-sizing:border-box;
-    }
-    .calDay .n{
-      font-weight:800;
-      font-size:14px;
-      color:#111;
-    }
-    .calDay.past{ opacity:.55; }
-    .calDay.past .n{ text-decoration: line-through; }
-    .calDay.today{
-      border-color: rgba(0,0,0,.35);
-      box-shadow: 0 8px 18px rgba(0,0,0,.08);
-    }
-    .calDay.empty{ background: transparent; border: 0; }
-
-    .dayProgress{
-      position:absolute;
-      left:0;
-      bottom:0;
-      height:7px;
-      width:0%;
-      background: rgba(0,0,0,.65);
-    }
-    .calDay.past .dayProgress{ width:100%; background: rgba(0,0,0,.25); }
-
-    /* ✅ Móvil: contadores alineados 2x2 (incluye secundarios) */
-    @media (max-width: 520px){
-      .timer{
-        display:grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap:10px;
-        width:100%;
-        justify-items:stretch;
-      }
-      .box{
-        min-width:0;
-        width:100%;
-      }
-      .timerRow{
-        width:100%;
-        justify-content:center;
-      }
-
-      /* Ajustes de tamaño en móvil */
+    @media (max-width:420px){
       body{ padding:14px; padding-top:14px; }
       .card{ padding:18px 14px; }
       h1{ font-size:22px; }
-
+      .box{ min-width:78px; padding:12px 10px; }
       .num{ font-size:28px; }
       .lbl{ font-size:11px; }
-      .box{ padding:12px 10px; }
-
-      .card.small .num{ font-size:18px; }
-      .card.small .lbl{ font-size:10px; }
-      .card.small .box{ padding:10px 8px; }
-
       .hg{ width:56px; height:82px; }
       .hgMini{ width:40px; height:58px; }
-
-      .calDay{ min-height:46px; padding:7px 7px 9px; }
-      .calDay .n{ font-size:13px; }
+      .pill{ min-width:48px; padding:6px 7px; }
     }
   </style>
 </head>
@@ -334,20 +221,6 @@
       </div>
 
       <div class="done" id="main_done">¡Llegó el 24 de abril (Chile)! 🎉</div>
-    </div>
-
-    <!-- CALENDARIO (Chile) -->
-    <div class="card">
-      <h3 class="sectionTitle">Calendario (Chile)</h3>
-      <div class="calHeader">
-        <div class="calTitle" id="calTitle">--</div>
-        <div class="calLegend">
-          <span class="dot past"></span> Pasado
-          <span class="dot today"></span> Hoy
-          <span class="dot future"></span> Futuro
-        </div>
-      </div>
-      <div class="calGrid" id="calendar"></div>
     </div>
 
     <!-- SECUNDARIAS -->
@@ -385,7 +258,7 @@
 
     <!-- CUENTAS PEQUEÑAS -->
     <div class="card">
-      <h3 class="sectionTitle">Otras</h3>
+      <h3 class="sectionTitle">Otras cuentas regresivas (Chile)</h3>
       <div class="miniGrid" id="miniGrid"></div>
     </div>
   </div>
@@ -526,6 +399,7 @@
 
     const p = Math.max(0, Math.min(1, pctRemaining));
 
+    // áreas de arena aprox dentro del SVG
     const topMax = 46;
     const bottomMax = 46;
 
@@ -538,6 +412,7 @@
     bottomRect.setAttribute("y", 92 - bottomH);
     bottomRect.setAttribute("height", bottomH);
 
+    // stream on/off
     stream.style.opacity = (p <= 0) ? "0" : "";
   }
 
@@ -590,11 +465,11 @@
     return zonedTimeToUtcMs(year, monthIndex, day, 0, 0, 0, chileTZ);
   }
 
-  // --- Targets grandes ---
+  // --- Targets grandes (los originales) ---
   const targets = {
-    main: chileMidnightTargetMs(2026, 3, 24),
-    a:    chileMidnightTargetMs(2026, 3, 17),
-    b:    chileMidnightTargetMs(2026, 4, 15)
+    main: chileMidnightTargetMs(2026, 3, 24), // 24 Abr
+    a:    chileMidnightTargetMs(2026, 3, 17), // 17 Abr
+    b:    chileMidnightTargetMs(2026, 4, 15)  // 15 May
   };
 
   // Render hourglasses grandes
@@ -602,7 +477,7 @@
   el("hg_a").innerHTML = hourglassSVG("a", false);
   el("hg_b").innerHTML = hourglassSVG("b", false);
 
-  // --- Cuentas pequeñas ---
+  // --- Cuentas pequeñas (iniciales + fecha) ---
   const smallEvents = [
     { code:"JA", id:"ja", m:0, d:30, label:"30 de enero" },
     { code:"OS", id:"os", m:1, d:14, label:"14 de febrero" },
@@ -619,16 +494,14 @@
   }));
 
   // Render mini cards
-  el("miniGrid").innerHTML = smallEvents.map(e => `
+  const miniGrid = el("miniGrid");
+  miniGrid.innerHTML = smallEvents.map(e => `
     <div class="miniCard">
       <div class="miniLeft">
         <div class="hgWrap">${hourglassSVG(e.id, true)}</div>
         <div class="miniInfo">
           <div class="miniTag">${e.code}</div>
-          <div class="miniDate">
-            ${e.label}<br>
-            ${YEAR} · 00:00 (Chile)
-          </div>
+          <div class="miniDate">${e.label} ${YEAR} · 00:00 (Chile)</div>
         </div>
       </div>
 
@@ -641,93 +514,19 @@
     </div>
   `).join("");
 
-  // --- Calendario (Chile) ---
-  function getNowPartsInTZ(timeZone){
-    const dtf = new Intl.DateTimeFormat("en-US", {
-      timeZone,
-      hour12:false,
-      year:"numeric", month:"2-digit", day:"2-digit",
-      hour:"2-digit", minute:"2-digit", second:"2-digit"
-    });
-    const parts = dtf.formatToParts(new Date());
-    const map = {};
-    for (const p of parts) if (p.type !== "literal") map[p.type] = p.value;
-
-    return {
-      year: Number(map.year),
-      month: Number(map.month),
-      day: Number(map.day),
-      hour: Number(map.hour),
-      minute: Number(map.minute),
-      second: Number(map.second)
-    };
-  }
-
-  function daysInMonth(year, month1to12){
-    return new Date(year, month1to12, 0).getDate();
-  }
-
-  function firstWeekdayMonday0(year, month1to12){
-    const jsDay = new Date(year, month1to12 - 1, 1).getDay();
-    return (jsDay + 6) % 7;
-  }
-
-  function renderCalendarChile(){
-    const now = getNowPartsInTZ(chileTZ);
-    const y = now.year;
-    const m = now.month;
-    const today = now.day;
-
-    const totalDays = daysInMonth(y, m);
-    const startOffset = firstWeekdayMonday0(y, m);
-
-    const monthName = new Intl.DateTimeFormat("es-ES", { month:"long", year:"numeric", timeZone: chileTZ })
-      .format(new Date(Date.UTC(y, m-1, 1, 12, 0, 0)));
-    el("calTitle").textContent = monthName;
-
-    const wdays = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-
-    let html = "";
-    for (const w of wdays) html += `<div class="calWday">${w}</div>`;
-    for (let i=0; i<startOffset; i++) html += `<div class="calDay empty"></div>`;
-
-    for (let d=1; d<=totalDays; d++){
-      let cls = "calDay future";
-      if (d < today) cls = "calDay past";
-      if (d === today) cls = "calDay today";
-
-      let pct = 0;
-      if (d < today) pct = 100;
-      if (d === today){
-        const secondsNow = now.hour*3600 + now.minute*60 + now.second;
-        pct = Math.max(0, Math.min(100, (secondsNow / 86400) * 100));
-      }
-
-      html += `
-        <div class="${cls}">
-          <div class="n">${d}</div>
-          <div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
-        </div>
-      `;
-    }
-
-    el("calendar").innerHTML = html;
-  }
-
   function tick(){
     el("chileTime").innerHTML = "<strong>Hora actual en Chile:</strong> " + formatNowInTZ(chileTZ);
     el("bilbaoTime").innerHTML = "<strong>Hora actual en Bilbao:</strong> " + formatNowInTZ(bilbaoTZ);
 
+    // Grandes
     updateCountdown("main", targets.main);
     updateCountdown("a", targets.a);
     updateCountdown("b", targets.b);
 
+    // Pequeños
     for (const e of smallEvents){
       updateCountdown(e.id, e.targetMs);
     }
-
-    // ✅ calendario actualizado
-    renderCalendarChile();
   }
 
   tick();
