@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Cuenta regresiva (Chile)</title>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      text-align:center;
+      padding:24px;
+      position:relative;
+      background:#f4f4f4;
+
+      overflow-x:hidden;
+      overflow-y:auto;
+      align-items:flex-start;
+      padding-top:24px;
+      box-sizing:border-box;
+    }
+
+    /* Fondo con 20% de opacidad */
+    body::before{
+      content:"";
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:url("Fondo.png") center center / cover no-repeat;
+      opacity:0.2;
+      z-index:-1;
+    }
+
+    .wrap{ max-width:820px; width:100%; display:flex; flex-direction:column; gap:16px; }
+
+    .timeLine{
+      font-size:14px;
+      background:#ffffffee;
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    }
+
+    .card{
+      background:#ffffffee;
+      padding:28px 24px;
+      border-radius:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    h1{ margin:0 0 10px; font-size:28px; }
+    .date{ color:#555; margin-bottom:10px; }
+
+    .timerRow{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .timer{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin:0;
+    }
+
+    .box{
+      background:#f9f9f9;
+      border:1px solid #eee;
+      border-radius:14px;
+      padding:14px 16px;
+      min-width:95px;
+      box-sizing:border-box;
+    }
+
+    .num{ font-size:34px; font-weight:700; }
+    .lbl{ font-size:12px; color:#666; text-transform:uppercase; }
+    .done{ font-size:20px; font-weight:700; margin-top:12px; display:none; }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    @media (max-width:720px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card.small{ padding:16px; }
+    .card.small h2{ font-size:16px; margin:0 0 6px; }
+    .card.small .box{ padding:10px; min-width:72px; }
+    .card.small .num{ font-size:20px; }
+    .card.small .lbl{ font-size:10px; }
+    .card.small .done{ font-size:14px; }
+
+    /* SVG hourglass sizing */
+    .hg{
+      width:64px;
+      height:92px;
+      display:block;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.12));
+    }
+    .hgMini{
+      width:44px;
+      height:64px;
+      display:block;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.10));
+    }
+
+    .hgWrap{ display:flex; align-items:center; justify-content:center; }
+
+    /* Chorrito animado */
+    .streamAnim{ animation: stream 0.9s ease-in-out infinite; transform-origin: center; }
+    @keyframes stream{ 0%,100%{ opacity:.25; } 50%{ opacity:.85; } }
+
+    /* Respiración suave */
+    .hgBreath{ animation: breathe 2.3s ease-in-out infinite; transform-origin:center; }
+    @keyframes breathe{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(1px);} }
+
+    /* --- Sección de cuentas pequeñas --- */
+    .sectionTitle{
+      font-size:16px;
+      margin:0 0 10px;
+      color:#222;
+      text-align:left;
+    }
+
+    /* ✅ 2 por fila en PC, 1 por fila en celular */
+    .miniGrid{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:12px;
+    }
+    @media (max-width:520px){ .miniGrid{ grid-template-columns: 1fr; } }
+
+    .miniCard{
+      background:#ffffffee;
+      border-radius:14px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.07);
+      padding:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .miniLeft{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width:0;
+    }
+    .miniInfo{
+      text-align:left;
+      min-width:0;
+    }
+    .miniTag{
+      font-weight:800;
+      letter-spacing:.4px;
+      font-size:14px;
+      color:#111;
+      white-space:nowrap;
+    }
+
+    /* ✅ Permite 2 líneas (fecha arriba / año abajo) */
+    .miniDate{
+      font-size:12px;
+      color:#555;
+      margin-top:2px;
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+      line-height:1.15;
+    }
+
+    .miniCountdown{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+
+    /* ✅ Más compacto */
+    .pill{
+      background:#f9f9f9;
+      border:1px solid #eee;
+      border-radius:12px;
+      padding:5px 6px;
+      min-width:46px;
+      box-sizing:border-box;
+    }
+    .pill .pnum{ font-weight:800; font-size:12px; line-height:1; }
+    .pill .plbl{ font-size:9px; color:#666; text-transform:uppercase; margin-top:3px; }
+
+    /* --- Calendario (Chile) --- */
+    .calHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .calTitle{
+      font-weight:800;
+      font-size:16px;
+      text-align:left;
+    }
+    .calLegend{
+      font-size:12px;
+      color:#555;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      display:inline-block; margin-right:6px;
+      border:1px solid rgba(0,0,0,.15);
+    }
+    .dot.past{ background: rgba(0,0,0,.18); }
+    .dot.today{ background: rgba(0,0,0,.65); }
+    .dot.future{ background: rgba(255,255,255,.6); }
+
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+    }
+    .calWday{
+      font-size:11px;
+      color:#666;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      padding:6px 0;
+    }
+    .calDay{
+      background:#ffffffcc;
+      border:1px solid #eee;
+      border-radius:12px;
+      min-height:52px;
+      padding:8px 8px 10px;
+      position:relative;
+      overflow:hidden;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      box-sizing:border-box;
+    }
+    .calDay .n{
+      font-weight:800;
+      font-size:14px;
+      color:#111;
+    }
+    .calDay.past{ opacity:.55; }
+    .calDay.past .n{ text-decoration: line-through; }
+    .calDay.today{
+      border-color: rgba(0,0,0,.35);
+      box-shadow: 0 8px 18px rgba(0,0,0,.08);
+    }
+    .calDay.empty{ background: transparent; border: 0; }
+
+    .dayProgress{
+      position:absolute;
+      left:0;
+      bottom:0;
+      height:7px;
+      width:0%;
+      background: rgba(0,0,0,.65);
+    }
+    .calDay.past .dayProgress{ width:100%; background: rgba(0,0,0,.25); }
+
+    /* ✅ Móvil: contadores alineados 2x2 (incluye secundarios) */
+    @media (max-width: 520px){
+      .timer{
+        display:grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap:10px;
+        width:100%;
+        justify-items:stretch;
+      }
+      .box{
+        min-width:0;
+        width:100%;
+      }
+      .timerRow{
+        width:100%;
+        justify-content:center;
+      }
+
+      /* Ajustes de tamaño en móvil */
+      body{ padding:14px; padding-top:14px; }
+      .card{ padding:18px 14px; }
+      h1{ font-size:22px; }
+
+      .num{ font-size:28px; }
+      .lbl{ font-size:11px; }
+      .box{ padding:12px 10px; }
+
+      .card.small .num{ font-size:18px; }
+      .card.small .lbl{ font-size:10px; }
+      .card.small .box{ padding:10px 8px; }
+
+      .hg{ width:56px; height:82px; }
+      .hgMini{ width:40px; height:58px; }
+
+      .calDay{ min-height:46px; padding:7px 7px 9px; }
+      .calDay .n{ font-size:13px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="timeLine" id="chileTime">Chile: --</div>
+    <div class="timeLine" id="bilbaoTime">Bilbao: --</div>
+
+    <!-- PRINCIPAL -->
+    <div class="card">
+      <h1>Cuenta regresiva</h1>
+      <div class="date">Hasta el <strong>24 de abril de 2026</strong> (00:00 en Chile)</div>
+
+      <div class="timerRow">
+        <div class="hgWrap" id="hg_main"></div>
+
+        <div class="timer">
+          <div class="box"><div class="num" id="main_days">--</div><div class="lbl">Días</div></div>
+          <div class="box"><div class="num" id="main_hours">--</div><div class="lbl">Horas</div></div>
+          <div class="box"><div class="num" id="main_minutes">--</div><div class="lbl">Minutos</div></div>
+          <div class="box"><div class="num" id="main_seconds">--</div><div class="lbl">Segundos</div></div>
+        </div>
+      </div>
+
+      <div class="done" id="main_done">¡Llegó el 24 de abril (Chile)! 🎉</div>
+    </div>
+
+    <!-- CALENDARIO (Chile) -->
+    <div class="card">
+      <h3 class="sectionTitle">Calendario (Chile)</h3>
+      <div class="calHeader">
+        <div class="calTitle" id="calTitle">--</div>
+        <div class="calLegend">
+          <span class="dot past"></span> Pasado
+          <span class="dot today"></span> Hoy
+          <span class="dot future"></span> Futuro
+        </div>
+      </div>
+      <div class="calGrid" id="calendar"></div>
+    </div>
+
+    <!-- SECUNDARIAS -->
+    <div class="grid">
+      <div class="card small">
+        <h2>17 de abril (Chile)</h2>
+        <div class="timerRow">
+          <div class="hgWrap" id="hg_a"></div>
+
+          <div class="timer">
+            <div class="box"><div class="num" id="a_days">--</div><div class="lbl">Días</div></div>
+            <div class="box"><div class="num" id="a_hours">--</div><div class="lbl">Horas</div></div>
+            <div class="box"><div class="num" id="a_minutes">--</div><div class="lbl">Min</div></div>
+            <div class="box"><div class="num" id="a_seconds">--</div><div class="lbl">Seg</div></div>
+          </div>
+        </div>
+        <div class="done" id="a_done">¡Llegó! ✅</div>
+      </div>
+
+      <div class="card small">
+        <h2>15 de mayo (Chile)</h2>
+        <div class="timerRow">
+          <div class="hgWrap" id="hg_b"></div>
+
+          <div class="timer">
+            <div class="box"><div class="num" id="b_days">--</div><div class="lbl">Días</div></div>
+            <div class="box"><div class="num" id="b_hours">--</div><div class="lbl">Horas</div></div>
+            <div class="box"><div class="num" id="b_minutes">--</div><div class="lbl">Min</div></div>
+            <div class="box"><div class="num" id="b_seconds">--</div><div class="lbl">Seg</div></div>
+          </div>
+        </div>
+        <div class="done" id="b_done">¡Llegó! ✅</div>
+      </div>
+    </div>
+
+    <!-- CUENTAS PEQUEÑAS -->
+    <div class="card">
+      <h3 class="sectionTitle">Otras</h3>
+      <div class="miniGrid" id="miniGrid"></div>
+    </div>
+  </div>
+
+<script>
+  const chileTZ = "America/Santiago";
+  const bilbaoTZ = "Europe/Madrid";
+  const YEAR = 2026;
+
+  const el = (id) => document.getElementById(id);
+
+  function formatNowInTZ(tz){
+    return new Intl.DateTimeFormat("es-ES", {
+      timeZone: tz,
+      dateStyle: "full",
+      timeStyle: "medium"
+    }).format(new Date());
+  }
+
+  // --- Conversión correcta "hora local Chile" -> UTC ms (maneja DST) ---
+  function getOffsetMinutes(date, timeZone){
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+    const parts = dtf.formatToParts(date);
+    const map = {};
+    for (const p of parts) if (p.type !== "literal") map[p.type] = p.value;
+
+    const asIfUTC = Date.UTC(
+      Number(map.year),
+      Number(map.month) - 1,
+      Number(map.day),
+      Number(map.hour),
+      Number(map.minute),
+      Number(map.second)
+    );
+    return (asIfUTC - date.getTime()) / 60000;
+  }
+
+  function zonedTimeToUtcMs(year, monthIndex, day, hour, minute, second, timeZone){
+    let t = Date.UTC(year, monthIndex, day, hour, minute, second);
+    let offset = getOffsetMinutes(new Date(t), timeZone);
+    let corrected = t - offset * 60000;
+
+    // segunda pasada (mejor cerca de cambios DST)
+    offset = getOffsetMinutes(new Date(corrected), timeZone);
+    corrected = t - offset * 60000;
+
+    return corrected;
+  }
+
+  // Inicio fijo: 29 enero 2026 00:00 en Chile
+  const startMs = zonedTimeToUtcMs(2026, 0, 29, 0, 0, 0, chileTZ);
+
+  // --- SVG hourglass template (ids únicos por sufijo) ---
+  function hourglassSVG(suffix, mini=false){
+    const cls = mini ? "hgMini hgBreath" : "hg hgBreath";
+    const topId = `sandTopRect_${suffix}`;
+    const botId = `sandBottomRect_${suffix}`;
+    const streamId = `stream_${suffix}`;
+
+    const glassClip = `glassClip_${suffix}`;
+    const maskTop = `sandMaskTop_${suffix}`;
+    const maskBot = `sandMaskBottom_${suffix}`;
+    const glassGrad = `glassGrad_${suffix}`;
+    const sandGrad = `sandGrad_${suffix}`;
+
+    return `
+      <svg class="${cls}" viewBox="0 0 64 92" aria-label="Reloj de arena">
+        <defs>
+          <clipPath id="${glassClip}">
+            <path d="M18 12
+                     C18 26, 26 33, 30 38
+                     C31 39, 31 53, 30 54
+                     C26 59, 18 66, 18 80
+                     L46 80
+                     C46 66, 38 59, 34 54
+                     C33 53, 33 39, 34 38
+                     C38 33, 46 26, 46 12
+                     Z"/>
+          </clipPath>
+
+          <mask id="${maskTop}">
+            <rect x="0" y="0" width="64" height="92" fill="black"/>
+            <rect id="${topId}" x="0" y="0" width="64" height="40" fill="white"/>
+          </mask>
+
+          <mask id="${maskBot}">
+            <rect x="0" y="0" width="64" height="92" fill="black"/>
+            <rect id="${botId}" x="0" y="52" width="64" height="40" fill="white"/>
+          </mask>
+
+          <linearGradient id="${glassGrad}" x1="0" x2="1">
+            <stop offset="0" stop-color="rgba(255,255,255,.65)"/>
+            <stop offset="0.5" stop-color="rgba(255,255,255,.25)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,.55)"/>
+          </linearGradient>
+
+          <linearGradient id="${sandGrad}" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="rgba(40,40,40,.80)"/>
+            <stop offset="1" stop-color="rgba(20,20,20,.65)"/>
+          </linearGradient>
+        </defs>
+
+        <rect x="14" y="6" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
+        <rect x="14" y="80" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
+
+        <path d="M18 12
+                 C18 26, 26 33, 30 38
+                 C31 39, 31 53, 30 54
+                 C26 59, 18 66, 18 80
+                 L46 80
+                 C46 66, 38 59, 34 54
+                 C33 53, 33 39, 34 38
+                 C38 33, 46 26, 46 12
+                 Z"
+              fill="url(#${glassGrad})"
+              stroke="rgba(0,0,0,.85)"
+              stroke-width="2" />
+
+        <g clip-path="url(#${glassClip})">
+          <rect x="0" y="0" width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskTop})"/>
+          <rect x="0" y="46" width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskBot})"/>
+          <rect id="${streamId}" class="streamAnim" x="31" y="42" width="2" height="18" rx="1" fill="rgba(20,20,20,.65)"/>
+        </g>
+      </svg>
+    `;
+  }
+
+  function setSVGHourglass(suffix, pctRemaining){
+    const topRect = document.getElementById(`sandTopRect_${suffix}`);
+    const bottomRect = document.getElementById(`sandBottomRect_${suffix}`);
+    const stream = document.getElementById(`stream_${suffix}`);
+    if (!topRect || !bottomRect || !stream) return;
+
+    const p = Math.max(0, Math.min(1, pctRemaining));
+
+    const topMax = 46;
+    const bottomMax = 46;
+
+    const topH = topMax * p;
+    const bottomH = bottomMax * (1 - p);
+
+    topRect.setAttribute("y", 0);
+    topRect.setAttribute("height", topH);
+
+    bottomRect.setAttribute("y", 92 - bottomH);
+    bottomRect.setAttribute("height", bottomH);
+
+    stream.style.opacity = (p <= 0) ? "0" : "";
+  }
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+
+  function updateCountdown(prefix, targetMs){
+    const nowMs = Date.now();
+    const diff = targetMs - nowMs;
+
+    // porcentaje desde inicio fijo
+    const total = Math.max(1, targetMs - startMs);
+    let pctRemaining = 1;
+
+    if (nowMs > startMs) {
+      const remaining = Math.max(0, targetMs - nowMs);
+      pctRemaining = remaining / total;
+    }
+
+    setSVGHourglass(prefix, pctRemaining);
+
+    const dEl = el(prefix+"_days");
+    const hEl = el(prefix+"_hours");
+    const mEl = el(prefix+"_minutes");
+    const sEl = el(prefix+"_seconds");
+    const doneEl = el(prefix+"_done");
+
+    if (!dEl || !hEl || !mEl || !sEl) return;
+
+    if (diff <= 0){
+      dEl.textContent = hEl.textContent = mEl.textContent = sEl.textContent = "00";
+      if (doneEl) doneEl.style.display = "block";
+      return;
+    } else {
+      if (doneEl) doneEl.style.display = "none";
+    }
+
+    const totalSec = Math.floor(diff/1000);
+    const days = Math.floor(totalSec/(24*3600));
+    const hours = Math.floor((totalSec%(24*3600))/3600);
+    const minutes = Math.floor((totalSec%3600)/60);
+    const seconds = totalSec%60;
+
+    dEl.textContent = String(days);
+    hEl.textContent = pad2(hours);
+    mEl.textContent = pad2(minutes);
+    sEl.textContent = pad2(seconds);
+  }
+
+  function chileMidnightTargetMs(year, monthIndex, day){
+    return zonedTimeToUtcMs(year, monthIndex, day, 0, 0, 0, chileTZ);
+  }
+
+  // --- Targets grandes ---
+  const targets = {
+    main: chileMidnightTargetMs(2026, 3, 24),
+    a:    chileMidnightTargetMs(2026, 3, 17),
+    b:    chileMidnightTargetMs(2026, 4, 15)
+  };
+
+  // Render hourglasses grandes
+  el("hg_main").innerHTML = hourglassSVG("main", false);
+  el("hg_a").innerHTML = hourglassSVG("a", false);
+  el("hg_b").innerHTML = hourglassSVG("b", false);
+
+  // --- Cuentas pequeñas ---
+  const smallEvents = [
+    { code:"JA", id:"ja", m:0, d:30, label:"30 de enero" },
+    { code:"OS", id:"os", m:1, d:14, label:"14 de febrero" },
+    { code:"JP", id:"jp", m:1, d:15, label:"15 de febrero" },
+    { code:"JC", id:"jc", m:1, d:18, label:"18 de febrero" },
+    { code:"GC", id:"gc", m:4, d:5,  label:"5 de mayo" },
+    { code:"CS", id:"cs", m:4, d:19, label:"19 de mayo" },
+    { code:"PCC",id:"pcc",m:4, d:24, label:"24 de mayo" },
+    { code:"AA", id:"aa", m:9, d:13, label:"13 de octubre" },
+    { code:"ME", id:"me", m:10,d:5,  label:"5 de noviembre" }
+  ].map(e => ({
+    ...e,
+    targetMs: chileMidnightTargetMs(YEAR, e.m, e.d)
+  }));
+
+  // Render mini cards
+  el("miniGrid").innerHTML = smallEvents.map(e => `
+    <div class="miniCard">
+      <div class="miniLeft">
+        <div class="hgWrap">${hourglassSVG(e.id, true)}</div>
+        <div class="miniInfo">
+          <div class="miniTag">${e.code}</div>
+          <div class="miniDate">
+            ${e.label}<br>
+            ${YEAR} · 00:00 (Chile)
+          </div>
+        </div>
+      </div>
+
+      <div class="miniCountdown">
+        <div class="pill"><div class="pnum" id="${e.id}_days">--</div><div class="plbl">Días</div></div>
+        <div class="pill"><div class="pnum" id="${e.id}_hours">--</div><div class="plbl">Horas</div></div>
+        <div class="pill"><div class="pnum" id="${e.id}_minutes">--</div><div class="plbl">Min</div></div>
+        <div class="pill"><div class="pnum" id="${e.id}_seconds">--</div><div class="plbl">Seg</div></div>
+      </div>
+    </div>
+  `).join("");
+
+  // --- Calendario (Chile) ---
+  function getNowPartsInTZ(timeZone){
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour12:false,
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", second:"2-digit"
+    });
+    const parts = dtf.formatToParts(new Date());
+    const map = {};
+    for (const p of parts) if (p.type !== "literal") map[p.type] = p.value;
+
+    return {
+      year: Number(map.year),
+      month: Number(map.month),
+      day: Number(map.day),
+      hour: Number(map.hour),
+      minute: Number(map.minute),
+      second: Number(map.second)
+    };
+  }
+
+  function daysInMonth(year, month1to12){
+    return new Date(year, month1to12, 0).getDate();
+  }
+
+  function firstWeekdayMonday0(year, month1to12){
+    const jsDay = new Date(year, month1to12 - 1, 1).getDay();
+    return (jsDay + 6) % 7;
+  }
+
+  function renderCalendarChile(){
+    const now = getNowPartsInTZ(chileTZ);
+    const y = now.year;
+    const m = now.month;
+    const today = now.day;
+
+    const totalDays = daysInMonth(y, m);
+    const startOffset = firstWeekdayMonday0(y, m);
+
+    const monthName = new Intl.DateTimeFormat("es-ES", { month:"long", year:"numeric", timeZone: chileTZ })
+      .format(new Date(Date.UTC(y, m-1, 1, 12, 0, 0)));
+    el("calTitle").textContent = monthName;
+
+    const wdays = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+
+    let html = "";
+    for (const w of wdays) html += `<div class="calWday">${w}</div>`;
+    for (let i=0; i<startOffset; i++) html += `<div class="calDay empty"></div>`;
+
+    for (let d=1; d<=totalDays; d++){
+      let cls = "calDay future";
+      if (d < today) cls = "calDay past";
+      if (d === today) cls = "calDay today";
+
+      let pct = 0;
+      if (d < today) pct = 100;
+      if (d === today){
+        const secondsNow = now.hour*3600 + now.minute*60 + now.second;
+        pct = Math.max(0, Math.min(100, (secondsNow / 86400) * 100));
+      }
+
+      html += `
+        <div class="${cls}">
+          <div class="n">${d}</div>
+          <div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
+        </div>
+      `;
+    }
+
+    el("calendar").innerHTML = html;
+  }
+
+  function tick(){
+    el("chileTime").innerHTML = "<strong>Hora actual en Chile:</strong> " + formatNowInTZ(chileTZ);
+    el("bilbaoTime").innerHTML = "<strong>Hora actual en Bilbao:</strong> " + formatNowInTZ(bilbaoTZ);
+
+    updateCountdown("main", targets.main);
+    updateCountdown("a", targets.a);
+    updateCountdown("b", targets.b);
+
+    for (const e of smallEvents){
+      updateCountdown(e.id, e.targetMs);
+    }
+
+    // ✅ calendario actualizado
+    renderCalendarChile();
+  }
+
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
