@@ -322,6 +322,22 @@
       .calDay .n{ font-size:12px; }
       .calWday{ font-size:10px; }
     }
+	
+	.calBadge{
+	  position:absolute;
+	  top:8px;
+	  right:8px;
+	  font-size:11px;
+	  font-weight:800;
+	  letter-spacing:.3px;
+	  padding:3px 6px;
+	  border-radius:10px;
+	  background: rgba(0,0,0,.65);
+	  color: white;
+	  line-height:1;
+	}
+	.calDay.past .calBadge{ opacity:.7; }
+
   </style>
 </head>
 
@@ -351,13 +367,13 @@
 
     <!-- CALENDARIO (Chile) -->
     <div class="card">
-      <h3 class="sectionTitle">Calendario (Chile)</h3>
+      <h3 class="sectionTitle">Calendario</h3>
       <div class="calHeader">
         <div class="calTitle" id="calTitle">--</div>
         <div class="calLegend">
           <span class="dot past"></span> Pasado
           <span class="dot today"></span> Hoy
-          <span class="dot future"></span> Futuro
+          <span class="dot future"></span> 
         </div>
       </div>
       <div class="calGrid" id="calendar"></div>
@@ -627,6 +643,29 @@
     targetMs: chileMidnightTargetMs(YEAR, e.m, e.d)
   }));
 
+	// Iniciales por fecha (monthIndex 0-11)
+	const calendarInitials = [
+	  { m:0, d:30, code:"JA" },
+	  { m:1, d:14, code:"OS" },
+	  { m:1, d:15, code:"JP" },
+	  { m:1, d:18, code:"JC" },
+	  { m:4, d:5,  code:"GC" },
+	  { m:4, d:19, code:"CS" },
+	  { m:4, d:24, code:"PCC" },
+	  { m:9, d:13, code:"AA" },
+	  { m:10,d:5,  code:"ME" },
+
+	  // Si quieres también las “grandes”:
+	  { m:3, d:17, code:"A" },
+	  { m:3, d:24, code:"MAIN" },
+	  { m:4, d:15, code:"B" },
+	];
+
+	// Para búsqueda rápida: "2026-02-14" -> "OS"
+	const initialsByDateKey = new Map(
+	  calendarInitials.map(e => [`${YEAR}-${String(e.m+1).padStart(2,"0")}-${String(e.d).padStart(2,"0")}`, e.code])
+);
+
   el("miniGrid").innerHTML = smallEvents.map(e => `
     <div class="miniCard">
       <div class="miniLeft">
@@ -698,25 +737,31 @@
     for (const w of wdays) html += `<div class="calWday">${w}</div>`;
     for (let i=0; i<startOffset; i++) html += `<div class="calDay empty"></div>`;
 
-    for (let d=1; d<=totalDays; d++){
-      let cls = "calDay future";
-      if (d < today) cls = "calDay past";
-      if (d === today) cls = "calDay today";
+	for (let d=1; d<=totalDays; d++){
+	  let cls = "calDay future";
+	  if (d < today) cls = "calDay past";
+	  if (d === today) cls = "calDay today";
 
-      let pct = 0;
-      if (d < today) pct = 100;
-      if (d === today){
-        const secondsNow = now.hour*3600 + now.minute*60 + now.second;
-        pct = Math.max(0, Math.min(100, (secondsNow / 86400) * 100));
-      }
+	  let pct = 0;
+	  if (d < today) pct = 100;
+	  if (d === today){
+		const secondsNow = now.hour*3600 + now.minute*60 + now.second;
+		pct = Math.max(0, Math.min(100, (secondsNow / 86400) * 100));
+	  }
 
-      html += `
-        <div class="${cls}">
-          <div class="n">${d}</div>
-          <div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
-        </div>
-      `;
-    }
+	  // ✅ buscar iniciales para este día (mes actual del calendario)
+	  const key = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+	  const code = initialsByDateKey.get(key);
+
+	  html += `
+		<div class="${cls}">
+		  <div class="n">${d}</div>
+		  ${code ? `<div class="calBadge">${code}</div>` : ""}
+		  <div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
+		</div>
+	  `;
+	}
+
 
     el("calendar").innerHTML = html;
   }
