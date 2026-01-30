@@ -398,6 +398,18 @@
 	  .calBadge .tiny{ display:inline; }
 	}
 
+	/* ✅ Tachado después de 1 día de haber terminado */
+	.expired{
+	  opacity: .55;
+	}
+	.expired .num,
+	.expired .lbl,
+	.expired .pnum,
+	.expired .plbl,
+	.expired h2,
+	.expired .miniTag{
+	  text-decoration: line-through;
+	}
 
 
   </style>
@@ -409,7 +421,7 @@
     <div class="timeLine" id="bilbaoTime">Bilbao: --</div>
 
     <!-- PRINCIPAL -->
-    <div class="card">
+    <div class="card" id="card_main">
       <h1>Cuenta regresiva</h1>
       <div class="date">Hasta el <strong>24 de abril de 2026</strong> (00:00 en Chile)</div>
 
@@ -443,7 +455,7 @@
 
     <!-- SECUNDARIAS -->
     <div class="grid">
-      <div class="card small">
+      <div class="card small" id="card_a">
         <h2>17 de abril (Chile)</h2>
         <div class="timerRow">
           <div class="hgWrap" id="hg_a"></div>
@@ -458,7 +470,7 @@
         <div class="done" id="a_done">¡Llegó! ✅</div>
       </div>
 
-      <div class="card small">
+      <div class="card small" id="card_b">
         <h2>15 de mayo (Chile)</h2>
         <div class="timerRow">
           <div class="hgWrap" id="hg_b"></div>
@@ -634,47 +646,57 @@
 
   function pad2(n){ return String(n).padStart(2,"0"); }
 
-  function updateCountdown(prefix, targetMs){
-    const nowMs = Date.now();
-    const diff = targetMs - nowMs;
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-    const total = Math.max(1, targetMs - startMs);
-    let pctRemaining = 1;
+	function updateCountdown(prefix, targetMs, cardId){
+	  const nowMs = Date.now();
+	  const diff = targetMs - nowMs;
 
-    if (nowMs > startMs) {
-      const remaining = Math.max(0, targetMs - nowMs);
-      pctRemaining = remaining / total;
-    }
+	  // ✅ si han pasado 24h desde que terminó => tachar
+	  if (cardId){
+		const card = document.getElementById(cardId);
+		const strike = (nowMs - targetMs) >= ONE_DAY_MS;
+		if (card) card.classList.toggle("expired", strike);
+	  }
 
-    setSVGHourglass(prefix, pctRemaining);
+	  const total = Math.max(1, targetMs - startMs);
+	  let pctRemaining = 1;
 
-    const dEl = el(prefix+"_days");
-    const hEl = el(prefix+"_hours");
-    const mEl = el(prefix+"_minutes");
-    const sEl = el(prefix+"_seconds");
-    const doneEl = el(prefix+"_done");
+	  if (nowMs > startMs) {
+		const remaining = Math.max(0, targetMs - nowMs);
+		pctRemaining = remaining / total;
+	  }
 
-    if (!dEl || !hEl || !mEl || !sEl) return;
+	  setSVGHourglass(prefix, pctRemaining);
 
-    if (diff <= 0){
-      dEl.textContent = hEl.textContent = mEl.textContent = sEl.textContent = "00";
-      if (doneEl) doneEl.style.display = "block";
-      return;
-    } else {
-      if (doneEl) doneEl.style.display = "none";
-    }
+	  const dEl = el(prefix+"_days");
+	  const hEl = el(prefix+"_hours");
+	  const mEl = el(prefix+"_minutes");
+	  const sEl = el(prefix+"_seconds");
+	  const doneEl = el(prefix+"_done");
 
-    const totalSec = Math.floor(diff/1000);
-    const days = Math.floor(totalSec/(24*3600));
-    const hours = Math.floor((totalSec%(24*3600))/3600);
-    const minutes = Math.floor((totalSec%3600)/60);
-    const seconds = totalSec%60;
+	  if (!dEl || !hEl || !mEl || !sEl) return;
 
-    dEl.textContent = String(days);
-    hEl.textContent = pad2(hours);
-    mEl.textContent = pad2(minutes);
-    sEl.textContent = pad2(seconds);
-  }
+	  if (diff <= 0){
+		dEl.textContent = hEl.textContent = mEl.textContent = sEl.textContent = "00";
+		if (doneEl) doneEl.style.display = "block";
+		return;
+	  } else {
+		if (doneEl) doneEl.style.display = "none";
+	  }
+
+	  const totalSec = Math.floor(diff/1000);
+	  const days = Math.floor(totalSec/(24*3600));
+	  const hours = Math.floor((totalSec%(24*3600))/3600);
+	  const minutes = Math.floor((totalSec%3600)/60);
+	  const seconds = totalSec%60;
+
+	  dEl.textContent = String(days);
+	  hEl.textContent = pad2(hours);
+	  mEl.textContent = pad2(minutes);
+	  sEl.textContent = pad2(seconds);
+	}
+
 
   function chileMidnightTargetMs(year, monthIndex, day){
     return zonedTimeToUtcMs(year, monthIndex, day, 0, 0, 0, chileTZ);
@@ -729,7 +751,7 @@
 );
 
   el("miniGrid").innerHTML = smallEvents.map(e => `
-    <div class="miniCard">
+    <div class="miniCard" id="card_${e.id}">
       <div class="miniLeft">
         <div class="hgWrap">${hourglassSVG(e.id, true)}</div>
         <div class="miniInfo">
@@ -840,13 +862,13 @@
     el("chileTime").innerHTML = "<strong>Hora actual en Chile:</strong> " + formatNowInTZ(chileTZ);
     el("bilbaoTime").innerHTML = "<strong>Hora actual en Bilbao:</strong> " + formatNowInTZ(bilbaoTZ);
 
-    updateCountdown("main", targets.main);
-    updateCountdown("a", targets.a);
-    updateCountdown("b", targets.b);
+    updateCountdown("main", targets.main, "card_main");
+	updateCountdown("a", targets.a, "card_a");
+	updateCountdown("b", targets.b, "card_b");
 
-    for (const e of smallEvents){
-      updateCountdown(e.id, e.targetMs);
-    }
+	for (const e of smallEvents){
+	  updateCountdown(e.id, e.targetMs, `card_${e.id}`);
+	}
 
     renderCalendarChile();
   }
