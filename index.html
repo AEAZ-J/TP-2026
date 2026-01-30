@@ -804,32 +804,55 @@
 	  calendarInitials.map(e => [`${YEAR}-${String(e.m+1).padStart(2,"0")}-${String(e.d).padStart(2,"0")}`, e.code])
 );
 
-  el("miniGrid").innerHTML = smallEvents.map(e => `
-    <div class="miniCard" id="card_${e.id}">
-      <div class="miniLeft">
-        <div class="hgWrap">${hourglassSVG(e.id, true)}</div>
-        <div class="miniInfo">
-          <div class="miniTag">${e.code}</div>
-          <div class="miniDate">
-            ${e.label}<br>
-            ${YEAR} · 00:00 (Chile)
-          </div>
-        </div>
-      </div>
+	function miniCardHTML(e){
+	  return `
+		<div class="miniCard" id="card_${e.id}">
+		  <div class="miniLeft">
+			<div class="hgWrap">${hourglassSVG(e.id, true)}</div>
+			<div class="miniInfo">
+			  <div class="miniTag">${e.code}</div>
+			  <div class="miniDate">
+				${e.label}<br>
+				${YEAR} · 00:00 (Chile)
+			  </div>
+			</div>
+		  </div>
 
-      <div class="miniCountdown">
-        <div class="pill"><div class="pnum" id="${e.id}_days">--</div><div class="plbl">Días</div></div>
-        <div class="pill"><div class="pnum" id="${e.id}_hours">--</div><div class="plbl">Horas</div></div>
-        <div class="pill"><div class="pnum" id="${e.id}_minutes">--</div><div class="plbl">Min</div></div>
-        <div class="pill"><div class="pnum" id="${e.id}_seconds">--</div><div class="plbl">Seg</div></div>
-      </div>
-		  <div class="celebrate" id="${e.id}_celebrate">
-		  <span style="font-size:22px">📯</span>
-		  <span class="confetti">🎉🎊</span>
-	  </div>
-	  
-    </div>
-  `).join("");
+		  <div class="miniCountdown">
+			<div class="pill"><div class="pnum" id="${e.id}_days">--</div><div class="plbl">Días</div></div>
+			<div class="pill"><div class="pnum" id="${e.id}_hours">--</div><div class="plbl">Horas</div></div>
+			<div class="pill"><div class="pnum" id="${e.id}_minutes">--</div><div class="plbl">Min</div></div>
+			<div class="pill"><div class="pnum" id="${e.id}_seconds">--</div><div class="plbl">Seg</div></div>
+		  </div>
+
+		  <div class="celebrate">
+			<span style="font-size:22px">📯</span>
+			<span class="confetti">🎉🎊</span>
+		  </div>
+		</div>
+	  `;
+	}
+
+	function renderMiniGrid(){
+	  const nowMs = Date.now();
+
+	  // ✅ Pendientes primero; pasados al final
+	const sorted = [...smallEvents].sort((a,b) => {
+	  const aMoveToBottom = nowMs >= (a.targetMs + ONE_DAY_MS); // ✅ recién al día siguiente
+	  const bMoveToBottom = nowMs >= (b.targetMs + ONE_DAY_MS);
+
+	  if (aMoveToBottom !== bMoveToBottom) return aMoveToBottom ? 1 : -1; // los que ya “tocó bajar” van abajo
+	  return a.targetMs - b.targetMs; // orden por fecha
+	});
+
+	  el("miniGrid").innerHTML = sorted.map(miniCardHTML).join("");
+
+	  // ✅ actualizar contadores inmediatamente (para que no se vean "--" hasta el próximo tick)
+	  for (const e of sorted){
+		updateCountdown(e.id, e.targetMs, `card_${e.id}`);
+	  }
+	}
+
 
   function getNowPartsInTZ(timeZone){
     const dtf = new Intl.DateTimeFormat("en-US", {
@@ -928,6 +951,7 @@
 	for (const e of smallEvents){
 	  updateCountdown(e.id, e.targetMs, `card_${e.id}`);
 	}
+	renderMiniGrid();
 
     renderCalendarChile();
   }
