@@ -100,6 +100,7 @@
       line-height:1.1;
     }
 
+
     .done{ font-size:20px; font-weight:700; margin-top:12px; display:none; }
 
     .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
@@ -410,7 +411,35 @@
 	.expired .miniTag{
 	  text-decoration: line-through;
 	}
+	/* ✅ Durante 24h después de terminar: ocultar contador y mostrar celebración */
+	.celebrating .timer,
+	.celebrating .miniCountdown{
+	  display:none !important;
+	}
 
+	.celebrate{
+	  display:none;
+	  font-size:22px;
+	  font-weight:900;
+	  gap:10px;
+	  align-items:center;
+	  justify-content:center;
+	}
+
+	.celebrating .celebrate{
+	  display:flex;
+	}
+
+	/* confetti simple */
+	.confetti{
+	  display:inline-block;
+	  animation: pop 0.9s ease-in-out infinite;
+	}
+	@keyframes pop{
+	  0%,100%{ transform: translateY(0) rotate(0deg); opacity:.75; }
+	  50%{ transform: translateY(-2px) rotate(6deg); opacity:1; }
+	}
+		
 
   </style>
 </head>
@@ -435,6 +464,11 @@
           <div class="box"><div class="num" id="main_seconds">--</div><div class="lbl">Segundos</div></div>
         </div>
       </div>
+
+		<div class="celebrate" id="main_celebrate">
+		  <span style="font-size:34px">📯</span>
+		  <span class="confetti">🎉✨🎊</span>
+		</div>
 
       <div class="done" id="main_done">¡Llegó el 24 de abril (Chile)! 🎉</div>
     </div>
@@ -467,6 +501,11 @@
             <div class="box"><div class="num" id="a_seconds">--</div><div class="lbl">Seg</div></div>
           </div>
         </div>
+		<div class="celebrate" id="a_celebrate">
+		  <span style="font-size:30px">📯</span>
+		  <span class="confetti">🎉✨🎊</span>
+		</div>
+
         <div class="done" id="a_done">¡Llegó! ✅</div>
       </div>
 
@@ -482,6 +521,11 @@
             <div class="box"><div class="num" id="b_seconds">--</div><div class="lbl">Seg</div></div>
           </div>
         </div>
+		<div class="celebrate" id="b_celebrate">
+		  <span style="font-size:30px">📯</span>
+		  <span class="confetti">🎉✨🎊</span>
+		</div>
+
         <div class="done" id="b_done">¡Llegó! ✅</div>
       </div>
     </div>
@@ -646,17 +690,23 @@
 
   function pad2(n){ return String(n).padStart(2,"0"); }
 
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  	const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 	function updateCountdown(prefix, targetMs, cardId){
 	  const nowMs = Date.now();
 	  const diff = targetMs - nowMs;
 
-	  // ✅ si han pasado 24h desde que terminó => tachar
 	  if (cardId){
 		const card = document.getElementById(cardId);
-		const strike = (nowMs - targetMs) >= ONE_DAY_MS;
-		if (card) card.classList.toggle("expired", strike);
+
+		const finished = diff <= 0;
+		const celebrating = finished && (nowMs - targetMs) < ONE_DAY_MS; // 0–24h
+		const expired = finished && (nowMs - targetMs) >= ONE_DAY_MS;    // 24h+
+
+		if (card){
+		  card.classList.toggle("celebrating", celebrating);
+		  card.classList.toggle("expired", expired);
+		}
 	  }
 
 	  const total = Math.max(1, targetMs - startMs);
@@ -679,7 +729,10 @@
 
 	  if (diff <= 0){
 		dEl.textContent = hEl.textContent = mEl.textContent = sEl.textContent = "00";
-		if (doneEl) doneEl.style.display = "block";
+		if (doneEl){
+		  const celebratingNow = (nowMs - targetMs) < ONE_DAY_MS;
+		  doneEl.style.display = celebratingNow ? "none" : "block";
+		}
 		return;
 	  } else {
 		if (doneEl) doneEl.style.display = "none";
@@ -696,6 +749,7 @@
 	  mEl.textContent = pad2(minutes);
 	  sEl.textContent = pad2(seconds);
 	}
+
 
 
   function chileMidnightTargetMs(year, monthIndex, day){
@@ -769,6 +823,11 @@
         <div class="pill"><div class="pnum" id="${e.id}_minutes">--</div><div class="plbl">Min</div></div>
         <div class="pill"><div class="pnum" id="${e.id}_seconds">--</div><div class="plbl">Seg</div></div>
       </div>
+		  <div class="celebrate" id="${e.id}_celebrate">
+		  <span style="font-size:22px">📯</span>
+		  <span class="confetti">🎉🎊</span>
+	  </div>
+	  
     </div>
   `).join("");
 
