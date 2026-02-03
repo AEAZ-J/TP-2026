@@ -439,6 +439,14 @@
 	  0%,100%{ transform: translateY(0) rotate(0deg); opacity:.75; }
 	  50%{ transform: translateY(-2px) rotate(6deg); opacity:1; }
 	}
+
+/* Colores del número del día */
+.calDay .n{ color:#111; }                 /* normal */
+.calDay.sat .n{ color:#1e66ff; }          /* sábado (azul) */
+.calDay.sun .n{ color:#e03131; }          /* domingo (rojo) */
+
+/* feriado manda (aunque sea sábado/domingo) */
+.calDay.holiday .n{ color:#f08c00 !important; }  /* feriado (naranja) */
 		
 
   </style>
@@ -487,48 +495,6 @@
       <div class="calGrid" id="calendar"></div>
     </div>
 
-    <!-- SECUNDARIAS -->
-    <div class="grid">
-      <div class="card small" id="card_a">
-        <h2>17 de abril (Chile)</h2>
-        <div class="timerRow">
-          <div class="hgWrap" id="hg_a"></div>
-
-          <div class="timer">
-            <div class="box"><div class="num" id="a_days">--</div><div class="lbl">Días</div></div>
-            <div class="box"><div class="num" id="a_hours">--</div><div class="lbl">Horas</div></div>
-            <div class="box"><div class="num" id="a_minutes">--</div><div class="lbl">Min</div></div>
-            <div class="box"><div class="num" id="a_seconds">--</div><div class="lbl">Seg</div></div>
-          </div>
-        </div>
-		<div class="celebrate" id="a_celebrate">
-		  <span style="font-size:30px">📯</span>
-		  <span class="confetti">🎉✨🎊</span>
-		</div>
-
-        <div class="done" id="a_done">¡Llegó! ✅</div>
-      </div>
-
-      <div class="card small" id="card_b">
-        <h2>15 de mayo (Chile)</h2>
-        <div class="timerRow">
-          <div class="hgWrap" id="hg_b"></div>
-
-          <div class="timer">
-            <div class="box"><div class="num" id="b_days">--</div><div class="lbl">Días</div></div>
-            <div class="box"><div class="num" id="b_hours">--</div><div class="lbl">Horas</div></div>
-            <div class="box"><div class="num" id="b_minutes">--</div><div class="lbl">Min</div></div>
-            <div class="box"><div class="num" id="b_seconds">--</div><div class="lbl">Seg</div></div>
-          </div>
-        </div>
-		<div class="celebrate" id="b_celebrate">
-		  <span style="font-size:30px">📯</span>
-		  <span class="confetti">🎉✨🎊</span>
-		</div>
-
-        <div class="done" id="b_done">¡Llegó! ✅</div>
-      </div>
-    </div>
 
     <!-- CUENTAS PEQUEÑAS -->
     <div class="card">
@@ -540,9 +506,28 @@
 <script>
   const chileTZ = "America/Santiago";
   const bilbaoTZ = "Europe/Madrid";
+  const japanTZ = "Asia/Tokyo";
+
   const YEAR = 2026;
 
   const el = (id) => document.getElementById(id);
+
+// =====================================================
+// FERIADOS (Chile) - versión simple (lista manual)
+// =====================================================
+const holidaySet = new Set([
+  // EJEMPLOS 2026 (rellena con los que quieras)
+  // "2026-01-01", // Año Nuevo
+  // "2026-05-01", // Día del Trabajador
+]);
+
+function isoKey(y, m1to12, d){
+  return `${y}-${String(m1to12).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+function isHolidayISO(iso){
+  return holidaySet.has(iso);
+}
+
 
   function formatNowInTZ(tz){
     return new Intl.DateTimeFormat("es-ES", {
@@ -591,102 +576,102 @@
   const startMs = zonedTimeToUtcMs(2026, 0, 29, 0, 0, 0, chileTZ);
 
   // --- SVG hourglass template (ids únicos por sufijo) ---
-  function hourglassSVG(suffix, mini=false){
-    const cls = mini ? "hgMini hgBreath" : "hg hgBreath";
-    const topId = `sandTopRect_${suffix}`;
-    const botId = `sandBottomRect_${suffix}`;
-    const streamId = `stream_${suffix}`;
+	function hourglassSVG(suffix, mini=false){
+	  const cls = mini ? "hgMini hgBreath" : "hg hgBreath";
 
-    const glassClip = `glassClip_${suffix}`;
-    const maskTop = `sandMaskTop_${suffix}`;
-    const maskBot = `sandMaskBottom_${suffix}`;
-    const glassGrad = `glassGrad_${suffix}`;
-    const sandGrad = `sandGrad_${suffix}`;
+	  const topId = `sandTopRect_${suffix}`;
+	  const botId = `sandBottomRect_${suffix}`;
+	  const streamId = `stream_${suffix}`;
 
-    return `
-      <svg class="${cls}" viewBox="0 0 64 92" aria-label="Reloj de arena">
-        <defs>
-          <clipPath id="${glassClip}">
-            <path d="M18 12
-                     C18 26, 26 33, 30 38
-                     C31 39, 31 53, 30 54
-                     C26 59, 18 66, 18 80
-                     L46 80
-                     C46 66, 38 59, 34 54
-                     C33 53, 33 39, 34 38
-                     C38 33, 46 26, 46 12
-                     Z"/>
-          </clipPath>
+	  const glassClip = `glassClip_${suffix}`;
+	  const maskTop = `sandMaskTop_${suffix}`;
+	  const maskBot = `sandMaskBottom_${suffix}`;
+	  const glassGrad = `glassGrad_${suffix}`;
+	  const sandGrad = `sandGrad_${suffix}`;
 
-          <mask id="${maskTop}">
-            <rect x="0" y="0" width="64" height="92" fill="black"/>
-            <rect id="${topId}" x="0" y="0" width="64" height="40" fill="white"/>
-          </mask>
+	  return `
+		<svg class="${cls}" viewBox="0 0 64 92" aria-label="Reloj de arena">
+		  <defs>
+			<clipPath id="${glassClip}">
+			  <path d="M18 12 C18 26, 26 33, 30 38 C31 39, 31 53, 30 54
+					   C26 59, 18 66, 18 80 L46 80
+					   C46 66, 38 59, 34 54 C33 53, 33 39, 34 38
+					   C38 33, 46 26, 46 12 Z"/>
+			</clipPath>
 
-          <mask id="${maskBot}">
-            <rect x="0" y="0" width="64" height="92" fill="black"/>
-            <rect id="${botId}" x="0" y="52" width="64" height="40" fill="white"/>
-          </mask>
+			<!-- 46 arriba / 46 abajo -->
+			<mask id="${maskTop}">
+			  <rect x="0" y="0" width="64" height="92" fill="black"/>
+			  <rect id="${topId}" x="0" y="0" width="64" height="46" fill="white"/>
+			</mask>
 
-          <linearGradient id="${glassGrad}" x1="0" x2="1">
-            <stop offset="0" stop-color="rgba(255,255,255,.65)"/>
-            <stop offset="0.5" stop-color="rgba(255,255,255,.25)"/>
-            <stop offset="1" stop-color="rgba(255,255,255,.55)"/>
-          </linearGradient>
+			<mask id="${maskBot}">
+			  <rect x="0" y="0" width="64" height="92" fill="black"/>
+			  <rect id="${botId}" x="0" y="46" width="64" height="46" fill="white"/>
+			</mask>
 
-          <linearGradient id="${sandGrad}" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stop-color="rgba(40,40,40,.80)"/>
-            <stop offset="1" stop-color="rgba(20,20,20,.65)"/>
-          </linearGradient>
-        </defs>
+			<linearGradient id="${glassGrad}" x1="0" x2="1">
+			  <stop offset="0" stop-color="rgba(255,255,255,.65)"/>
+			  <stop offset="0.5" stop-color="rgba(255,255,255,.25)"/>
+			  <stop offset="1" stop-color="rgba(255,255,255,.55)"/>
+			</linearGradient>
 
-        <rect x="14" y="6" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
-        <rect x="14" y="80" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
+			<linearGradient id="${sandGrad}" x1="0" x2="0" y1="0" y2="1">
+			  <stop offset="0" stop-color="rgba(40,40,40,.80)"/>
+			  <stop offset="1" stop-color="rgba(20,20,20,.65)"/>
+			</linearGradient>
+		  </defs>
 
-        <path d="M18 12
-                 C18 26, 26 33, 30 38
-                 C31 39, 31 53, 30 54
-                 C26 59, 18 66, 18 80
-                 L46 80
-                 C46 66, 38 59, 34 54
-                 C33 53, 33 39, 34 38
-                 C38 33, 46 26, 46 12
-                 Z"
-              fill="url(#${glassGrad})"
-              stroke="rgba(0,0,0,.85)"
-              stroke-width="2" />
+		  <rect x="14" y="6" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
+		  <rect x="14" y="80" width="36" height="6" rx="3" fill="rgba(0,0,0,.65)"/>
 
-        <g clip-path="url(#${glassClip})">
-          <rect x="0" y="0" width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskTop})"/>
-          <rect x="0" y="46" width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskBot})"/>
-          <rect id="${streamId}" class="streamAnim" x="31" y="42" width="2" height="18" rx="1" fill="rgba(20,20,20,.65)"/>
-        </g>
-      </svg>
-    `;
-  }
+		  <path d="M18 12 C18 26, 26 33, 30 38 C31 39, 31 53, 30 54
+				   C26 59, 18 66, 18 80 L46 80
+				   C46 66, 38 59, 34 54 C33 53, 33 39, 34 38
+				   C38 33, 46 26, 46 12 Z"
+				fill="url(#${glassGrad})"
+				stroke="rgba(0,0,0,.85)"
+				stroke-width="2" />
 
-  function setSVGHourglass(suffix, pctRemaining){
-    const topRect = document.getElementById(`sandTopRect_${suffix}`);
-    const bottomRect = document.getElementById(`sandBottomRect_${suffix}`);
-    const stream = document.getElementById(`stream_${suffix}`);
-    if (!topRect || !bottomRect || !stream) return;
+		  <g clip-path="url(#${glassClip})">
+			<rect x="0" y="0"  width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskTop})"/>
+			<rect x="0" y="46" width="64" height="46" fill="url(#${sandGrad})" mask="url(#${maskBot})"/>
 
-    const p = Math.max(0, Math.min(1, pctRemaining));
+			<rect id="${streamId}" class="streamAnim"
+				  x="31" y="42" width="2" height="18" rx="1"
+				  fill="rgba(20,20,20,.65)"/>
+		  </g>
+		</svg>
+	  `;
+	}
 
-    const topMax = 46;
-    const bottomMax = 46;
 
-    const topH = topMax * p;
-    const bottomH = bottomMax * (1 - p);
+	function setHourglass(suffix, pctRemaining){
+	  const topRect = document.getElementById(`sandTopRect_${suffix}`);
+	  const bottomRect = document.getElementById(`sandBottomRect_${suffix}`);
+	  const stream = document.getElementById(`stream_${suffix}`);
+	  if (!topRect || !bottomRect || !stream) return;
 
-    topRect.setAttribute("y", 0);
-    topRect.setAttribute("height", topH);
+	  const p = Math.max(0, Math.min(1, pctRemaining));
 
-    bottomRect.setAttribute("y", 92 - bottomH);
-    bottomRect.setAttribute("height", bottomH);
+	  const topMax = 46;
+	  const bottomMax = 46;
 
-    stream.style.opacity = (p <= 0) ? "0" : "";
-  }
+	  const topH = topMax * p;
+	  const bottomH = bottomMax * (1 - p);
+
+	  // ✅ ARRIBA: que “se apoye abajo” y suba al vaciarse
+	  topRect.setAttribute("y", (topMax - topH));
+	  topRect.setAttribute("height", topH);
+
+	  // ✅ ABAJO: se acumula desde el piso hacia arriba
+	  const bottomTopY = 92 - bottomH;
+	  bottomRect.setAttribute("y", bottomTopY);
+	  bottomRect.setAttribute("height", bottomH);
+
+	  stream.style.opacity = (p <= 0.01) ? "0" : "1";
+	}
+
 
   function pad2(n){ return String(n).padStart(2,"0"); }
 
@@ -717,7 +702,8 @@
 		pctRemaining = remaining / total;
 	  }
 
-	  setSVGHourglass(prefix, pctRemaining);
+	  setHourglass(prefix, pctRemaining);
+
 
 	  const dEl = el(prefix+"_days");
 	  const hEl = el(prefix+"_hours");
@@ -756,30 +742,29 @@
     return zonedTimeToUtcMs(year, monthIndex, day, 0, 0, 0, chileTZ);
   }
 
-  const targets = {
-    main: chileMidnightTargetMs(2026, 3, 24),
-    a:    chileMidnightTargetMs(2026, 3, 17),
-    b:    chileMidnightTargetMs(2026, 4, 15)
-  };
+	const targets = {
+	  main: chileMidnightTargetMs(2026, 3, 24),
+	};
 
-  el("hg_main").innerHTML = hourglassSVG("main", false);
-  el("hg_a").innerHTML = hourglassSVG("a", false);
-  el("hg_b").innerHTML = hourglassSVG("b", false);
+	el("hg_main").innerHTML = hourglassSVG("main", false);
+
 
   const smallEvents = [
     { code:"JA", id:"ja", m:0, d:30, label:"30 de enero" },
-    { code:"OS", id:"os", m:1, d:14, label:"14 de febrero" },
+    { code:"OS", id:"os", m:1, d:14, label:"14 de febrero", tz: japanTZ  },
     { code:"JP", id:"jp", m:1, d:15, label:"15 de febrero" },
     { code:"JC", id:"jc", m:1, d:18, label:"18 de febrero" },
     { code:"GC", id:"gc", m:4, d:5,  label:"5 de mayo" },
     { code:"CS", id:"cs", m:4, d:19, label:"19 de mayo" },
-    { code:"PCC",id:"pcc",m:4, d:24, label:"24 de mayo" },
+    { code:"PCC",id:"pcc",m:4, d:24, label:"24 de mayo", tz: bilbaoTZ  },
     { code:"AA", id:"aa", m:9, d:13, label:"13 de octubre" },
     { code:"ME", id:"me", m:10,d:5,  label:"5 de noviembre" }
-  ].map(e => ({
-    ...e,
-    targetMs: chileMidnightTargetMs(YEAR, e.m, e.d)
-  }));
+	].map(e => ({
+	  ...e,
+	  // ✅ si no tiene tz, usa Chile por defecto
+	  tz: e.tz || chileTZ,
+	  targetMs: midnightTargetMsInTZ(YEAR, e.m, e.d, e.tz || chileTZ)
+	}));
 
 	// Iniciales por fecha (monthIndex 0-11)
 	const calendarInitials = [
@@ -803,6 +788,9 @@
 	const initialsByDateKey = new Map(
 	  calendarInitials.map(e => [`${YEAR}-${String(e.m+1).padStart(2,"0")}-${String(e.d).padStart(2,"0")}`, e.code])
 );
+	function midnightTargetMsInTZ(year, monthIndex, day, timeZone){
+	  return zonedTimeToUtcMs(year, monthIndex, day, 0, 0, 0, timeZone);
+	}
 
 	function miniCardHTML(e){
 	  return `
@@ -812,8 +800,8 @@
 			<div class="miniInfo">
 			  <div class="miniTag">${e.code}</div>
 			  <div class="miniDate">
-				${e.label}<br>
-				${YEAR} · 00:00 (Chile)
+				  ${e.label}<br>
+				  ${YEAR} · 00:00 (${tzLabel(e.tz)})
 			  </div>
 			</div>
 		  </div>
@@ -853,6 +841,12 @@
 	  }
 	}
 
+	function tzLabel(tz){
+	  if (tz === chileTZ) return "Chile";
+	  if (tz === bilbaoTZ) return "Bilbao";
+	  if (tz === japanTZ) return "Japón";
+	  return tz;
+	}
 
   function getNowPartsInTZ(timeZone){
     const dtf = new Intl.DateTimeFormat("en-US", {
@@ -908,6 +902,19 @@
 	  if (d < today) cls = "calDay past";
 	  if (d === today) cls = "calDay today";
 
+	  // ✅ ISO del día (para feriados)
+	  const iso = isoKey(y, m, d);
+
+	  // ✅ día de semana real (0=domingo, 6=sábado)
+	  // Usamos UTC al mediodía para evitar rarezas
+	  const wd = new Date(Date.UTC(y, m-1, d, 12, 0, 0)).getUTCDay();
+	  if (wd === 6) cls += " sat";
+	  if (wd === 0) cls += " sun";
+
+	  // ✅ feriado manda
+	  const hol = isHolidayISO(iso);
+	  if (hol) cls += " holiday";
+
 	  let pct = 0;
 	  if (d < today) pct = 100;
 	  if (d === today){
@@ -915,26 +922,26 @@
 		pct = Math.max(0, Math.min(100, (secondsNow / 86400) * 100));
 	  }
 
-	  // ✅ buscar iniciales para este día (mes actual del calendario)
-		const key = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-		const code = initialsByDateKey.get(key);
+	  const key = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+	  const code = initialsByDateKey.get(key);
 
-		html += `
-		  <div class="${cls}">
-			<div class="n">${d}</div>
+	  html += `
+		<div class="${cls}">
+		  <div class="n">${d}</div>
 
-			${code ? `
-			  <div class="calBadge" title="${code}">
-				<span class="full">${code}</span>
-				<span class="short">${code.slice(0,2)}</span>
-				<span class="tiny">${code.slice(0,1)}</span>
-			  </div>
-			` : ""}
+		  ${code ? `
+			<div class="calBadge" title="${code}">
+			  <span class="full">${code}</span>
+			  <span class="short">${code.slice(0,2)}</span>
+			  <span class="tiny">${code.slice(0,1)}</span>
+			</div>
+		  ` : ""}
 
-			<div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
-		  </div>
-		`;
+		  <div class="dayProgress" style="width:${pct.toFixed(2)}%"></div>
+		</div>
+	  `;
 	}
+
 
 
     el("calendar").innerHTML = html;
@@ -944,9 +951,8 @@
     el("chileTime").innerHTML = "<strong>Hora actual en Chile:</strong> " + formatNowInTZ(chileTZ);
     el("bilbaoTime").innerHTML = "<strong>Hora actual en Bilbao:</strong> " + formatNowInTZ(bilbaoTZ);
 
-    updateCountdown("main", targets.main, "card_main");
-	updateCountdown("a", targets.a, "card_a");
-	updateCountdown("b", targets.b, "card_b");
+	updateCountdown("main", targets.main, "card_main");
+
 
 	for (const e of smallEvents){
 	  updateCountdown(e.id, e.targetMs, `card_${e.id}`);
